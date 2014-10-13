@@ -42,6 +42,7 @@ namespace BlankScreen
             this.TopMost = Settings1.Default.Topmost;
             if( Settings1.Default.ScreenIndex >= 0 )
             {
+                labelHelp.Hide();
                 screenHandler_Click(this, null, Settings1.Default.ScreenIndex);
             }
         }
@@ -70,6 +71,7 @@ namespace BlankScreen
                 this.Location = screen.Bounds.Location;
                 this.Size = screen.Bounds.Size;
                 Settings1.Default.ScreenIndex = index;
+                labelHelp.Hide();
             }
         }
 

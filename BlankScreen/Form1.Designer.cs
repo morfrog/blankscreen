@@ -30,12 +30,25 @@
         {
             this.components = new System.ComponentModel.Container();
             this.contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.labelHelp = new System.Windows.Forms.Label();
             this.SuspendLayout();
             // 
             // contextMenuStrip1
             // 
             this.contextMenuStrip1.Name = "contextMenuStrip1";
             this.contextMenuStrip1.Size = new System.Drawing.Size(61, 4);
+            // 
+            // labelHelp
+            // 
+            this.labelHelp.AutoSize = true;
+            this.labelHelp.ContextMenuStrip = this.contextMenuStrip1;
+            this.labelHelp.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.labelHelp.ForeColor = System.Drawing.SystemColors.ControlLightLight;
+            this.labelHelp.Location = new System.Drawing.Point(72, 114);
+            this.labelHelp.Name = "labelHelp";
+            this.labelHelp.Size = new System.Drawing.Size(152, 20);
+            this.labelHelp.TabIndex = 1;
+            this.labelHelp.Text = "Right click for menu.";
             // 
             // Form1
             // 
@@ -45,18 +58,21 @@
             this.ClientSize = new System.Drawing.Size(284, 261);
             this.ContextMenuStrip = this.contextMenuStrip1;
             this.ControlBox = false;
+            this.Controls.Add(this.labelHelp);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "Form1";
             this.Text = "Form1";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
             this.ResumeLayout(false);
+            this.PerformLayout();
 
         }
 
         #endregion
 
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.Label labelHelp;
     }
 }
 
