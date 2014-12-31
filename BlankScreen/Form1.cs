@@ -13,6 +13,9 @@ namespace BlankScreen
     public partial class Form1 : Form
     {
         FormCursorAutoHide _formCursor;
+        FormMenu _formMenu;
+        Rectangle _lastWindowRect;
+
         public Form1()
         {
             InitializeComponent();
@@ -21,63 +24,170 @@ namespace BlankScreen
         private void Form1_Load(object sender, EventArgs ev)
         {
             _formCursor = new FormCursorAutoHide(this, 3000);
-            if (Screen.AllScreens.Count() > 1)
+            _formMenu = new FormMenu(contextMenuStrip1);
+            _formMenu.MenuItemClicked += _formMenu_MenuItemClicked;
+            this.MinimumSize = this.Size;
+
+            if( Settings1.Default.WindowSize.IsEmpty )
             {
-                int index = 0;
-                foreach( var screen in Screen.AllScreens )
-                {
-                    var name = string.Format("Screen &{0}", index+1);
-                    int screenIndex = index;
-                    var handler = new EventHandler((o, e) => screenHandler_Click(o, ev, screenIndex));
-                    contextMenuStrip1.Items.Add(name, null, handler);
-                    index++;
-                }
+                var screen = Screen.PrimaryScreen;
+                var size = new Size((screen.Bounds.Size.Width - this.DefaultSize.Width) / 2, (screen.Bounds.Size.Height - this.DefaultSize.Height) / 2);
+                Point offCentre = Point.Add(screen.Bounds.Location, size);
+                _lastWindowRect = new Rectangle(offCentre, this.DefaultSize);
             }
-            
-            contextMenuStrip1.Items.Add(new ToolStripSeparator());
-            contextMenuStrip1.Items.Add(new ToolStripMenuItem("&Topmost", null, new EventHandler(topmostToolStripMenuItem_Click)) { CheckOnClick = true, Checked = Settings1.Default.Topmost });
-            contextMenuStrip1.Items.Add(new ToolStripMenuItem("&Minimize", null, new EventHandler(minimiseToolStripMenuItem_Click)));
-            contextMenuStrip1.Items.Add("E&xit", null, new EventHandler(exitToolStripMenuItem_Click));
+            else
+            {
+                _lastWindowRect = new Rectangle(Settings1.Default.WindowLocation, Settings1.Default.WindowSize);
+            }
+
+            this.Location = _lastWindowRect.Location;
+            this.Size = _lastWindowRect.Size;
 
             this.TopMost = Settings1.Default.Topmost;
             if( Settings1.Default.ScreenIndex >= 0 )
             {
-                labelHelp.Hide();
-                screenHandler_Click(this, null, Settings1.Default.ScreenIndex);
+                SetScreenMode(ScreenMode.Fullscreen, Settings1.Default.ScreenIndex);
             }
         }
 
-        private void topmostToolStripMenuItem_Click(object sender, EventArgs e)
+        void _formMenu_MenuItemClicked(FormMenu.FormMenuEventArgs args)
         {
-            Settings1.Default.Topmost = this.TopMost = ((ToolStripMenuItem)sender).Checked;
-        }
-
-        private void minimiseToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            this.WindowState = FormWindowState.Minimized;
-        }
-
-        private void exitToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            this.DialogResult = DialogResult.OK;
-            this.Close();
-        }
-
-        private void screenHandler_Click(object sender, EventArgs e, int index)
-        {
-            if( index >= 0 && index < Screen.AllScreens.Count() )
+            switch( args.Action )
             {
-                var screen = Screen.AllScreens[index];
-                this.Location = screen.Bounds.Location;
-                this.Size = screen.Bounds.Size;
-                Settings1.Default.ScreenIndex = index;
-                labelHelp.Hide();
+                case FormMenu.FormMenuEventArgs.MenuAction.Topmost:
+                    Settings1.Default.Topmost = this.TopMost = args.On;
+                    break;
+                case FormMenu.FormMenuEventArgs.MenuAction.Minimise:
+                    this.WindowState = FormWindowState.Minimized;
+                    break;
+                case FormMenu.FormMenuEventArgs.MenuAction.Exit:
+                    this.DialogResult = DialogResult.OK;
+                    this.Close();
+                    break;
+                case FormMenu.FormMenuEventArgs.MenuAction.Screen:
+                    ChangeScreen(ScreenChange.Normal, args.Screen, args.On );
+                    break;
+            }
+            
+        }
+
+        private int CurrentScreen
+        {
+            get
+            {
+                var pt = new Point( this.Location.X, this.Location.Y);
+                pt.Offset(this.Width / 2, this.Height / 2);
+                int index = 0;
+                foreach (var screen in Screen.AllScreens)
+                {
+                    if (screen.Bounds.Contains(pt))
+                    {
+                        return index;
+                    }
+                    index++;
+                }
+                return 0;
+            }
+        }
+
+        private ScreenMode CurrentScreenMode
+        {
+            get
+            {
+                return this.FormBorderStyle == System.Windows.Forms.FormBorderStyle.None ? ScreenMode.Fullscreen : ScreenMode.Window;
+            }
+        }
+
+        private enum ScreenMode { Window, Fullscreen };
+        private enum ScreenChange { Normal, Toggle };
+
+        private void ChangeScreen(ScreenChange change, int screenIndex, bool on = true)
+        {
+            var currScreenMode = this.FormBorderStyle == System.Windows.Forms.FormBorderStyle.None ? ScreenMode.Fullscreen : ScreenMode.Window;
+            var currScreenIndex = CurrentScreen;
+            ScreenMode newScreenMode;
+
+            if (change == ScreenChange.Toggle || (on ? currScreenMode == ScreenMode.Window : change == ScreenChange.Normal))
+            {
+                newScreenMode = currScreenMode == ScreenMode.Fullscreen ? ScreenMode.Window : ScreenMode.Fullscreen;
+            }
+            else
+            {
+                newScreenMode = currScreenIndex == screenIndex ? currScreenMode : ScreenMode.Fullscreen; // always fullscreen when changing screens
+            }
+            SetScreenMode(newScreenMode, screenIndex);
+        }
+        
+        private void SetScreenMode(ScreenMode mode, int screenIndex)
+        {
+            if (screenIndex >= 0 && screenIndex < Screen.AllScreens.Count())
+            {
+                var screen = Screen.AllScreens[screenIndex];
+                if (CurrentScreenMode != mode || CurrentScreen != screenIndex)
+                {
+                    if (mode == ScreenMode.Fullscreen)
+                    {
+                        if (CurrentScreenMode == ScreenMode.Window)
+                        {
+                            _lastWindowRect = new Rectangle(this.Location,this.Size);
+                        }
+                        this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
+                        this.Location = screen.Bounds.Location;
+                        this.Size = screen.Bounds.Size;
+                        labelHelp.Hide();
+                        _formMenu.SetScreen(screenIndex);
+                    }
+                    else
+                    {
+                        this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Sizable;
+                        this.Location = _lastWindowRect.Location;
+                        this.Size = _lastWindowRect.Size;
+                        labelHelp.Show();
+                        _formMenu.SetScreen();
+                    }
+                }
+
+                Settings1.Default.ScreenIndex = screenIndex;
+                this.TopMost = mode == ScreenMode.Fullscreen && _formMenu.TopMost;
             }
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
+            if (CurrentScreenMode == ScreenMode.Fullscreen)
+            {
+                Settings1.Default.WindowLocation = _lastWindowRect.Location;
+                Settings1.Default.WindowSize = _lastWindowRect.Size;
+            }
+            else
+            {
+                Settings1.Default.WindowLocation = this.Location;
+                Settings1.Default.WindowSize = this.Size;
+            }
             Settings1.Default.Save();
+        }
+
+        private void Form1_DoubleClick(object sender, EventArgs e)
+        {
+            int screenIndex;
+            var mouseArgs = e as MouseEventArgs;
+            if (mouseArgs != null )
+            {
+                var ptScreen = this.PointToScreen(mouseArgs.Location);
+                var screen = Screen.FromPoint(ptScreen);
+                screenIndex = Screen.AllScreens.ToList().IndexOf(screen);
+            }
+            else
+            {
+                screenIndex = CurrentScreen;
+            }
+
+            ChangeScreen(ScreenChange.Toggle, screenIndex);
+        }
+
+        private void labelHelp_DoubleClick(object sender, EventArgs e)
+        {
+            Form1_DoubleClick(sender, e);
         }
     }
 }

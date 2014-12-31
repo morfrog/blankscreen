@@ -40,30 +40,31 @@
             // 
             // labelHelp
             // 
+            this.labelHelp.Anchor = System.Windows.Forms.AnchorStyles.None;
             this.labelHelp.AutoSize = true;
             this.labelHelp.ContextMenuStrip = this.contextMenuStrip1;
             this.labelHelp.Font = new System.Drawing.Font("Microsoft Sans Serif", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.labelHelp.ForeColor = System.Drawing.SystemColors.ControlLightLight;
-            this.labelHelp.Location = new System.Drawing.Point(72, 114);
+            this.labelHelp.Location = new System.Drawing.Point(31, 9);
             this.labelHelp.Name = "labelHelp";
             this.labelHelp.Size = new System.Drawing.Size(152, 20);
             this.labelHelp.TabIndex = 1;
             this.labelHelp.Text = "Right click for menu.";
+            this.labelHelp.DoubleClick += new System.EventHandler(this.labelHelp_DoubleClick);
             // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.ClientSize = new System.Drawing.Size(284, 261);
+            this.ClientSize = new System.Drawing.Size(214, 37);
             this.ContextMenuStrip = this.contextMenuStrip1;
-            this.ControlBox = false;
             this.Controls.Add(this.labelHelp);
-            this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.None;
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "BlankScreen";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
             this.Load += new System.EventHandler(this.Form1_Load);
+            this.DoubleClick += new System.EventHandler(this.Form1_DoubleClick);
             this.ResumeLayout(false);
             this.PerformLayout();
 
