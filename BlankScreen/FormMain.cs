@@ -10,13 +10,13 @@ using System.Windows.Forms;
 
 namespace BlankScreen
 {
-    public partial class Form1 : Form
+    public partial class FormMain : Form
     {
         FormCursorAutoHide _formCursor;
         FormMenu _formMenu;
         Rectangle _lastWindowRect;
 
-        public Form1()
+        public FormMain()
         {
             InitializeComponent();
         }
